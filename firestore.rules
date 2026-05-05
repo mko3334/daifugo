@@ -1,0 +1,14 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // players/{playerId}/rounds サブコレクションへの読み書きを許可
+    match /players/{playerId}/rounds/{roundId} {
+      allow read, write: if true;
+    }
+    
+    // sessions コレクションへの読み書きを許可
+    match /sessions/{sessionId} {
+      allow read, write: if true;
+    }
+  }
+}

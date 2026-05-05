@@ -1,0 +1,88 @@
+/* カスタムフォント（@importは先頭に置く必要がある） */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Inter:wght@400;700;900&display=swap');
+@import "tailwindcss";
+
+* {
+  font-family: 'Noto Sans JP', 'Inter', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+body {
+  overflow: hidden;
+  touch-action: manipulation;
+}
+
+/* フェードインアニメーション */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* バウンスアニメーション */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}
+
+.animate-bounce {
+  animation: bounce 1s ease-in-out infinite;
+}
+
+/* グロー効果（ネオンテキスト・ボックス用） */
+.neon-text-gold {
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.8), 0 0 20px rgba(251, 191, 36, 0.4);
+}
+.neon-box-gold {
+  box-shadow: 0 0 15px rgba(251, 191, 36, 0.5), inset 0 0 10px rgba(251, 191, 36, 0.2);
+}
+.neon-box-red {
+  box-shadow: 0 0 15px rgba(220, 38, 38, 0.5), inset 0 0 10px rgba(220, 38, 38, 0.2);
+}
+
+/* カジノ風背景テクスチャ（ベルベット調） */
+.bg-velvet {
+  background-color: #450a0a; /* red-950 */
+  background-image: radial-gradient(circle at center, #7f1d1d 0%, #450a0a 100%);
+}
+
+/* 精算・税金用アテンションアニメーション */
+@keyframes alertFlash {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+.animate-alert {
+  animation: alertFlash 1s infinite;
+}
+
+/* コイン飛翔アニメーションのトランジション設定 */
+.coin-particle {
+  transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* 資金増減のポップアップアニメーション */
+@keyframes floatUp {
+  0% { opacity: 0; transform: translateY(10px) scale(0.8); }
+  20% { opacity: 1; transform: translateY(0) scale(1.1); }
+  80% { opacity: 1; transform: translateY(-20px) scale(1); }
+  100% { opacity: 0; transform: translateY(-30px) scale(0.9); }
+}
+.animate-float-up {
+  animation: floatUp 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* 流れる文字（マーキー）アニメーション */
+@keyframes marquee {
+  0% { transform: translateX(20%); }
+  100% { transform: translateX(-100%); }
+}
+.animate-marquee {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee 10s linear infinite;
+}
+

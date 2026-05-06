@@ -75,17 +75,17 @@ function formatMoney(amount) {
 const roundToMillion = (amount) => Math.ceil(amount / 1000000) * 1000000;
 
 function getPlayerCoords(position) {
-  switch (position) {
-    case 'top-left': return { x: '15vw', y: '15vh' };
-    case 'top-center': return { x: '50vw', y: '12vh' };
-    case 'top-right': return { x: '85vw', y: '15vh' };
-    case 'bottom-left': return { x: '15vw', y: '85vh' };
-    case 'bottom-center': return { x: '50vw', y: '88vh' };
-    case 'bottom-right': return { x: '85vw', y: '85vh' };
-    case 'mid-left': return { x: '10vw', y: '50vh' };
-    case 'mid-right': return { x: '90vw', y: '50vh' };
-    default: return { x: '50vw', y: '50vh' };
-  }
+  const coords = {
+    'top-left': { x: '15vw', y: '15vh' },
+    'top-center': { x: '50vw', y: '12vh' },
+    'top-right': { x: '85vw', y: '15vh' },
+    'bottom-left': { x: '15vw', y: '85vh' },
+    'bottom-center': { x: '50vw', y: '88vh' },
+    'bottom-right': { x: '85vw', y: '85vh' },
+    'mid-left': { x: '10vw', y: '50vh' },
+    'mid-right': { x: '90vw', y: '50vh' },
+  };
+  return coords[position] || { x: '50vw', y: '50vh' };
 }
 
 const shuffleArray = (array) => {
@@ -184,8 +184,7 @@ function PlayerPanel({
   gameState,
   availableRanks, 
   onAction,
-  isTop,
-  isRight
+  isTurn
 }) {
   const [editingName, setEditingName] = useState(false);
   const [showRankSelect, setShowRankSelect] = useState(false);
@@ -204,8 +203,11 @@ function PlayerPanel({
   const playerBet = player.currentBet;
   const diff = currentRequirement - playerBet;
 
+  const isActuallyTop = gameState.playerCount === 2 ? player.id === 'p1' : (player.position || '').includes('top');
+  const isRight = (player.position || '').includes('right');
+
   const selectedRank = ALL_RANKS.find(r => r.id === player.nextRankId);
-  const rotationClass = isTop ? 'rotate-180' : '';
+  const rotationClass = isActuallyTop ? 'rotate-180' : '';
   const borderColor = player.currentRank ? player.currentRank.borderClass : 'border-zinc-700';
   const headerBg = player.currentRank ? player.currentRank.bgClass : 'bg-zinc-800';
   const headerText = player.currentRank ? player.currentRank.textClass : 'text-amber-400';
@@ -439,6 +441,14 @@ export default function App() {
       // カードゲーム機能追加後の必須データ（deckや各プレイヤーのhand）があるかチェック
       const isLegacy = !parsed.deck || parsed.players.some(p => !p.hand);
       if (isLegacy) return getInitialState(parsed.playerCount || 4);
+      // positionがない場合に補完
+      parsed.players = parsed.players.map((p, i) => {
+        if (!p.position) {
+          const tempPositions = ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'mid-left', 'mid-right'];
+          return { ...p, position: tempPositions[i % tempPositions.length] || 'bottom-center' };
+        }
+        return p;
+      });
       return parsed;
     } catch (e) {
       return getInitialState(4);
@@ -789,23 +799,23 @@ export default function App() {
         </div>
       )}
 
-      <div className="relative z-10 w-full h-full pointer-events-none">
-        {gameState.players.map((player, index) => {
-          const coords = getPlayerCoords(player.position);
+      <div className="relative z-30 w-full h-full pointer-events-none">
+        {(gameState.players || []).map((player, index) => {
+          const coords = getPlayerCoords(player.position) || { x: '50vw', y: '50vh' };
           const isTurn = gameState.turnIndex === index;
           return (
             <div 
-              key={player.id} 
+              key={player.id || index} 
               className="absolute transition-all duration-500 pointer-events-auto"
               style={{ 
                 left: coords.x, 
                 top: coords.y, 
                 transform: 'translate(-50%, -50%)',
-                width: gameState.playerCount > 4 ? '26vw' : '40vw',
+                width: (gameState.playerCount || 4) > 4 ? '26vw' : '40vw',
                 maxWidth: '380px'
               }}
             >
-              <PlayerPanel player={player} gameState={gameState} availableRanks={availableRanks} onAction={handleAction} isTurn={isTurn} />
+              <PlayerPanel player={player} gameState={gameState} availableRanks={availableRanks || []} onAction={handleAction} isTurn={isTurn} />
             </div>
           );
         })}

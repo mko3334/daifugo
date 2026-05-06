@@ -76,14 +76,14 @@ const roundToMillion = (amount) => Math.ceil(amount / 1000000) * 1000000;
 
 function getPlayerCoords(position) {
   const coords = {
-    'top-left': { x: '15vw', y: '15vh' },
-    'top-center': { x: '50vw', y: '12vh' },
-    'top-right': { x: '85vw', y: '15vh' },
-    'bottom-left': { x: '15vw', y: '85vh' },
-    'bottom-center': { x: '50vw', y: '88vh' },
-    'bottom-right': { x: '85vw', y: '85vh' },
-    'mid-left': { x: '10vw', y: '50vh' },
-    'mid-right': { x: '90vw', y: '50vh' },
+    'top-left': { x: '20vw', y: '20vh' },
+    'top-center': { x: '50vw', y: '18vh' },
+    'top-right': { x: '80vw', y: '20vh' },
+    'bottom-left': { x: '20vw', y: '80vh' },
+    'bottom-center': { x: '50vw', y: '82vh' },
+    'bottom-right': { x: '80vw', y: '80vh' },
+    'mid-left': { x: '18vw', y: '50vh' },
+    'mid-right': { x: '82vw', y: '50vh' },
   };
   return coords[position] || { x: '50vw', y: '50vh' };
 }
@@ -811,11 +811,13 @@ export default function App() {
                 left: coords.x, 
                 top: coords.y, 
                 transform: 'translate(-50%, -50%)',
-                width: (gameState.playerCount || 4) > 4 ? '26vw' : '40vw',
-                maxWidth: '380px'
+                width: gameState.playerCount > 4 ? '200px' : '280px',
+                height: gameState.playerCount > 4 ? '300px' : '400px',
               }}
             >
-              <PlayerPanel player={player} gameState={gameState} availableRanks={availableRanks || []} onAction={handleAction} isTurn={isTurn} />
+              <div className={`w-full h-full scale-[0.85] md:scale-100 transition-transform`}>
+                <PlayerPanel player={player} gameState={gameState} availableRanks={availableRanks || []} onAction={handleAction} isTurn={isTurn} />
+              </div>
             </div>
           );
         })}

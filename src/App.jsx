@@ -324,12 +324,12 @@ function PlayerPanel({
           </div>
         ) : gameState.playMode === 'physical' ? (
           <div className="flex flex-col gap-2 w-full">
-             <div className="text-[10px] text-zinc-500 font-bold text-center uppercase tracking-tighter">着順を記録してください</div>
-             <div className="grid grid-cols-2 gap-1">
-              {availableRanks.map(rank => (
-                <button key={rank.id} onClick={() => onAction('SELECT_RANK', { playerId: player.id, rankId: rank.id })} className={`py-3 rounded-lg font-black text-[10px] transition-all border ${rank.bgClass} ${rank.textClass} ${rank.borderClass} ${player.nextRankId === rank.id ? 'ring-4 ring-white scale-105 z-10 shadow-xl' : 'opacity-60'}`}>{rank.icon} {rank.name}</button>
-              ))}
-            </div>
+            <button 
+              onClick={() => setShowRankSelect(true)} 
+              className="w-full py-4 rounded-xl font-black text-white bg-gradient-to-r from-amber-500 to-amber-700 shadow-lg active:scale-95 transition-all border border-amber-400/30 flex items-center justify-center gap-2"
+            >
+              <Trophy size={18} /> あがりを記録
+            </button>
           </div>
         ) : gameState.phase === 'pot_claim' ? (
           <div className="flex flex-col gap-2 w-full">

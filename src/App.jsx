@@ -322,15 +322,6 @@ function PlayerPanel({
             </div>
             <button onClick={() => setShowRankSelect(false)} className="text-zinc-400 text-xs py-1 hover:text-white font-bold">キャンセル</button>
           </div>
-        ) : gameState.playMode === 'physical' ? (
-          <div className="flex flex-col gap-2 w-full">
-            <button 
-              onClick={() => setShowRankSelect(true)} 
-              className="w-full py-4 rounded-xl font-black text-white bg-gradient-to-r from-amber-500 to-amber-700 shadow-lg active:scale-95 transition-all border border-amber-400/30 flex items-center justify-center gap-2"
-            >
-              <Trophy size={18} /> あがりを記録
-            </button>
-          </div>
         ) : gameState.phase === 'pot_claim' ? (
           <div className="flex flex-col gap-2 w-full">
             <button onClick={() => onAction('CLAIM_POT', { playerId: player.id })} className="w-full py-3 rounded-xl font-black text-amber-950 bg-gradient-to-b from-amber-300 to-amber-500 hover:brightness-110 active:scale-95 transition-all shadow-xl animate-pulse flex items-center justify-center gap-2 border border-amber-200 neon-box-gold"><Gem size={18} />💰 ポット総取り</button>
@@ -339,43 +330,56 @@ function PlayerPanel({
         ) : gameState.phase === 'tax_collection' ? (
           <div className="text-center text-amber-500 text-xs font-black animate-pulse py-4">💸 税金徴収中... 💸</div>
         ) : (
-          <div className="flex flex-col gap-2">
-            {selectedCards.length > 0 && (
-              <div className="flex gap-2">
-                <button onClick={() => { onAction('PLAY_CARDS', { playerId: player.id, cards: selectedCards }); setSelectedCards([]); }} className="flex-[2] py-3 rounded-xl font-black text-white bg-gradient-to-r from-emerald-500 to-teal-600 shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 border border-emerald-400">
-                  <Layers size={18} /> 出す
-                </button>
-                <button onClick={() => onAction('PASS_TURN', { playerId: player.id })} className="flex-1 py-3 rounded-xl font-black text-zinc-400 bg-zinc-800 border border-zinc-700 active:scale-95 transition-all">パス</button>
-              </div>
-            )}
-            
-            {currentRequirement === 0 && !isOpening ? (
-              <button onClick={() => setIsOpening(true)} className="w-full py-4 rounded-xl font-black text-xl text-white bg-gradient-to-r from-indigo-600 to-blue-600 hover:brightness-110 active:scale-95 transition-all shadow-xl border border-white/20 flex items-center justify-center gap-2">
-                <ScrollText size={24} /> 🎴 カードを出す
-              </button>
+          <div className="flex flex-col gap-1.5 w-full">
+            {isTurn ? (
+              <div className="flex flex-col gap-1.5 w-full">
+                {/* デジタルモード用のカード出し */}
+                {gameState.playMode === 'digital' && selectedCards.length > 0 && (
+                  <div className="flex gap-1.5 h-10">
+                    <button onClick={() => { onAction('PLAY_CARDS', { playerId: player.id, cards: selectedCards }); setSelectedCards([]); }} className="flex-[2] rounded-lg font-black text-xs text-white bg-gradient-to-r from-emerald-500 to-teal-600 shadow-lg border border-emerald-400 flex items-center justify-center gap-1">
+                      <Layers size={14} /> 出す
+                    </button>
+                    <button onClick={() => onAction('PASS_TURN', { playerId: player.id })} className="flex-1 rounded-lg font-black text-xs text-zinc-400 bg-zinc-800 border border-zinc-700">パス</button>
+                  </div>
+                )}
 
-            ) : currentRequirement > 0 && playerBet < currentRequirement ? (
-              <div className="flex gap-1 h-14">
-                <button onClick={() => onAction('BET', { playerId: player.id, amount: diff })} className="flex-[3] rounded-lg font-black text-sm bg-gradient-to-b from-amber-400 to-amber-600 text-amber-950 border border-amber-300 shadow-lg active:scale-95 transition-all flex flex-col items-center justify-center">
-                  <span className="text-[10px] opacity-80">差額を払う</span>
-                  <span>{formatMoney(diff)} G</span>
-                </button>
-                <button onClick={() => onAction('PASS', { playerId: player.id })} className="flex-1 rounded-lg font-black text-xs bg-zinc-900 text-zinc-500 border border-zinc-700">降りる(パス)</button>
+                {/* ベット操作 */}
+                {currentRequirement > 0 && playerBet < currentRequirement ? (
+                  <div className="flex gap-1 h-12">
+                    <button onClick={() => onAction('BET', { playerId: player.id, amount: diff })} className="flex-[3] rounded-lg font-black text-[10px] bg-gradient-to-b from-amber-400 to-amber-600 text-amber-950 border border-amber-300 flex flex-col items-center justify-center">
+                      <span className="text-[9px] opacity-70">差額を払う</span>
+                      <span>{formatMoney(diff)} G</span>
+                    </button>
+                    <button onClick={() => onAction('PASS', { playerId: player.id })} className="flex-1 rounded-lg font-black text-[10px] bg-zinc-900 text-zinc-500 border border-zinc-700">降りる</button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-4 gap-1 h-10">
+                    <button onClick={() => onAction('BET', { playerId: player.id, amount: unit * 1 })} className="rounded-lg font-black text-[9px] bg-zinc-800 text-amber-400 border border-zinc-600">100万</button>
+                    <button onClick={() => onAction('BET', { playerId: player.id, amount: unit * 5 })} className="rounded-lg font-black text-[9px] bg-zinc-800 text-amber-400 border border-zinc-600">500万</button>
+                    <button onClick={() => onAction('BET', { playerId: player.id, amount: unit * 10 })} className="rounded-lg font-black text-[9px] bg-red-900 text-amber-400 border border-red-700">1000万</button>
+                    <button onClick={() => onAction('PASS', { playerId: player.id })} className="rounded-lg font-black text-[9px] bg-zinc-900 text-zinc-500 border border-zinc-700">パス</button>
+                  </div>
+                )}
+
+                {/* 追加アクション */}
+                {gameState.playMode === 'digital' ? (
+                  !isOpening && selectedCards.length === 0 && (
+                    <button onClick={() => setIsOpening(true)} className="w-full py-2.5 rounded-xl font-black text-xs text-white bg-indigo-600 border border-indigo-400/30 flex items-center justify-center gap-2">
+                      <ScrollText size={14} /> カードを出す
+                    </button>
+                  )
+                ) : (
+                  <button onClick={() => setShowRankSelect(true)} className="w-full py-2.5 rounded-xl font-black text-xs text-white bg-amber-600 border border-amber-400/30 flex items-center justify-center gap-2">
+                    <Trophy size={14} /> あがりを記録
+                  </button>
+                )}
+                {isOpening && <button onClick={() => setIsOpening(false)} className="w-full py-1 text-[10px] text-zinc-500 font-bold">キャンセル</button>}
               </div>
             ) : (
-              <div className="flex flex-col gap-2">
-                <div className="flex gap-1 h-12">
-                  <button onClick={() => { onAction('BET', { playerId: player.id, amount: unit * 1 }); setIsOpening(false); }} className="flex-1 rounded-lg font-black text-xs bg-zinc-800 text-amber-400 border border-zinc-600">100万</button>
-                  <button onClick={() => { onAction('BET', { playerId: player.id, amount: unit * 5 }); setIsOpening(false); }} className="flex-1 rounded-lg font-black text-xs bg-zinc-800 text-amber-400 border border-zinc-600">500万</button>
-                  <button onClick={() => { onAction('BET', { playerId: player.id, amount: unit * 10 }); setIsOpening(false); }} className="flex-1 rounded-lg font-black text-xs bg-red-900 text-amber-400 border border-red-700">1000万</button>
-                  <button onClick={() => { onAction('PASS', { playerId: player.id }); setIsOpening(false); }} className="flex-1 rounded-lg font-black text-xs bg-zinc-900 text-zinc-500 border border-zinc-700">降りる(パス)</button>
-                </div>
-                {isOpening ? (
-                  <button onClick={() => setIsOpening(false)} className="w-full py-1 text-[10px] text-zinc-500 font-bold hover:text-white transition-colors">キャンセル</button>
-                ) : (
-                  <button onClick={() => setShowRankSelect(true)} className="w-full py-2 rounded-lg font-black text-xs text-amber-500 bg-black/50 border border-amber-900">🚩 あがり宣言</button>
-                )}
-              </div>
+              /* 自分の番でない時 */
+              <button onClick={() => setShowRankSelect(true)} className="w-full py-3 rounded-xl font-black text-xs text-zinc-500 bg-zinc-900/40 border border-zinc-800/50 flex items-center justify-center gap-2 hover:bg-zinc-800 hover:text-zinc-300 transition-all">
+                <Trophy size={14} /> あがりを記録
+              </button>
             )}
           </div>
         )}

@@ -20,7 +20,7 @@ const RANDOM_EVENTS = [
   { id: 'riot', name: '🔥 暴動', desc: '税金が逆転！下位陣が上位陣から搾取します', effectColor: 'text-red-500' },
   { id: 'fall_of_king', name: '👑 トップの没落', desc: '1位のプレイヤーから1000万Gがポットに流出します', effectColor: 'text-purple-400' },
   { id: 'carry_over', name: '🎁 キャリーオーバー', desc: 'このラウンドではポット総取りができません', effectColor: 'text-emerald-400' },
-  { id: 'revolution_money', name: '⚔️ 革命 (資金力逆転)', desc: '順位報酬とベット負担が逆転！大貧民は半額、大富豪は2倍に', effectColor: 'text-rose-500' },
+  { id: 'revolution', name: '⚔️ 革命', desc: 'カードの強さが逆転！3が最強、2が最弱になります', effectColor: 'text-rose-500' },
   { id: 'redistribution', name: '🤝 再分配', desc: 'トップの所持金10%を没収し、他3人に均等分配します', effectColor: 'text-blue-400' },
   { id: 'basic_income', name: '🕊️ ベーシックインカム', desc: '全員の口座に一律500万Gが給付されます', effectColor: 'text-teal-400' },
   { id: 'inflation', name: '📈 インフレ', desc: 'ベットレートが強制的に3倍になります', effectColor: 'text-orange-500' }
@@ -31,10 +31,11 @@ const BGM_URL = '/bgm.mp3';
 
 const INITIAL_GAME_STATE = {
   playerCount: 4,
+  playMode: 'digital', // 'digital' or 'physical'
   players: [],
   pot: 0,
   currentBetRequirement: 0, 
-  phase: 'betting', 
+  phase: 'setup', 
   round: 1,
   historyLog: [],
   playerLogs: {},
@@ -75,12 +76,14 @@ const roundToMillion = (amount) => Math.ceil(amount / 1000000) * 1000000;
 
 function getPlayerCoords(position) {
   switch (position) {
-    case 'top-left': return { x: '25vw', y: '25vh' };
-    case 'top-right': return { x: '75vw', y: '25vh' };
-    case 'bottom-left': return { x: '25vw', y: '75vh' };
-    case 'bottom-right': return { x: '75vw', y: '75vh' };
-    case 'top-center': return { x: '50vw', y: '25vh' };
-    case 'bottom-center': return { x: '50vw', y: '75vh' };
+    case 'top-left': return { x: '18vw', y: '22vh' };
+    case 'top-center': return { x: '50vw', y: '20vh' };
+    case 'top-right': return { x: '82vw', y: '22vh' };
+    case 'bottom-left': return { x: '18vw', y: '78vh' };
+    case 'bottom-center': return { x: '50vw', y: '80vh' };
+    case 'bottom-right': return { x: '82vw', y: '78vh' };
+    case 'mid-left': return { x: '15vw', y: '50vh' };
+    case 'mid-right': return { x: '85vw', y: '50vh' };
     default: return { x: '50vw', y: '50vh' };
   }
 }
@@ -99,15 +102,22 @@ const getRanksByCount = (count) => {
   if (count === 2) return [ALL_RANKS[0], ALL_RANKS[3]]; // 大富豪, 大貧民
   if (count === 3) return [ALL_RANKS[0], ALL_RANKS[4], ALL_RANKS[3]]; // 大富豪, 平民, 大貧民
   if (count === 4) return [ALL_RANKS[0], ALL_RANKS[1], ALL_RANKS[2], ALL_RANKS[3]]; // 大富豪, 富豪, 貧民, 大貧民
-  return [ALL_RANKS[0], ALL_RANKS[1], ALL_RANKS[4], ALL_RANKS[2], ALL_RANKS[3]]; // 暫定5人
+  if (count === 5) return [ALL_RANKS[0], ALL_RANKS[1], ALL_RANKS[4], ALL_RANKS[2], ALL_RANKS[3]]; // 大富豪, 富豪, 平民, 貧民, 大貧民
+  if (count === 6) return [ALL_RANKS[0], ALL_RANKS[1], ALL_RANKS[4], ALL_RANKS[4], ALL_RANKS[2], ALL_RANKS[3]]; // 大富豪, 富豪, 平民x2, 貧民, 大貧民
+  return [];
 };
 
-const getInitialState = (count = 4) => {
+const getInitialState = (count = 4, mode = 'digital') => {
   const ranks = getRanksByCount(count);
   const shuffledRanks = shuffleArray(ranks);
-  const positions = count === 2 ? ['top-center', 'bottom-center'] : 
-                    count === 3 ? ['bottom-right', 'top-left', 'bottom-left'] : 
-                    ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+  
+  let positions = [];
+  if (count === 2) positions = ['top-center', 'bottom-center'];
+  else if (count === 3) positions = ['bottom-right', 'top-left', 'bottom-left'];
+  else if (count === 4) positions = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+  else if (count === 5) positions = ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'top-center'];
+  else if (count === 6) positions = ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'mid-left', 'mid-right'];
+
   
   const deck = shuffleDeck(createDeck());
   const hands = dealCards(deck, count);
@@ -126,7 +136,9 @@ const getInitialState = (count = 4) => {
   return {
     ...INITIAL_GAME_STATE,
     playerCount: count,
+    playMode: mode,
     players,
+    phase: 'betting', // getInitialStateを呼んだ後はセットアップ完了なのでbettingへ
     playerLogs: players.reduce((acc, p) => ({ ...acc, [p.id]: [] }), {})
   };
 };
@@ -233,9 +245,7 @@ function PlayerPanel({
           )}
         </div>
 
-        <div className={`shrink-0 text-sm font-black px-2 py-0.5 rounded-full bg-black/40 ${headerText} border border-white/20`}>
-          {player.currentRank ? `${player.currentRank.icon} ${player.currentRank.name}` : '🧑 ゲスト'}
-        </div>
+        {player.currentRank && <div className={`text-[10px] font-black px-2 py-0.5 rounded-full ${player.currentRank.bgClass} ${player.currentRank.textClass} border ${player.currentRank.borderClass}`}>{player.currentRank.icon} {player.currentRank.name}</div>}
 
         {gameState.activeEvent && (
           <div className="flex-1 overflow-hidden flex items-center h-7 bg-black/60 rounded-md border border-white/10 shadow-inner">
@@ -257,11 +267,7 @@ function PlayerPanel({
           {formatMoney(player.funds)} <span className="text-lg opacity-70">G</span>
         </div>
 
-        <PlayerHand 
-          hand={player.hand || []} 
-          onSelectCard={toggleCard} 
-          selectedCards={selectedCards} 
-        />
+        {gameState.playMode === 'digital' && <PlayerHand hand={player.hand || []} onSelectCard={toggleCard} selectedCards={selectedCards} />}
         
         <div className="flex items-center gap-4 mt-8 h-20 w-full justify-center relative">
           {player.currentBet > 0 && (
@@ -306,19 +312,22 @@ function PlayerPanel({
             <span className="flex items-center gap-1 text-xs opacity-90 bg-black/50 px-2 py-1 rounded-lg"><Undo2 size={12} /> 取消</span>
           </button>
         ) : showRankSelect ? (
-          <div className="flex flex-col gap-1">
-            <div className="flex gap-1">
-              {availableRanks.map(rank => {
-                const is1st = rank.id === 1;
-                return (
-                  <button key={rank.id} onClick={() => { onAction('SELECT_RANK', { playerId: player.id, rankId: rank.id }); setShowRankSelect(false); }} className={`flex-1 py-2 rounded-lg font-bold text-[10px] shadow-md border-b-2 active:scale-95 transition-transform flex flex-col items-center justify-center ${is1st ? 'bg-amber-500 text-amber-950 border-amber-700' : 'bg-zinc-700 text-white border-zinc-900'}`}>
-                    <span className="text-sm font-black mb-0.5">{rank.id}着</span>
-                    <span className="text-[8px] opacity-80">+{rank.reward / 10000}万</span>
-                  </button>
-                );
-              })}
+          <div className="flex flex-col gap-2 w-full">
+            <div className="grid grid-cols-2 gap-1">
+              {availableRanks.map(rank => (
+                <button key={rank.id} onClick={() => onAction('SELECT_RANK', { playerId: player.id, rankId: rank.id })} className={`py-3 rounded-lg font-black text-[10px] transition-all border ${rank.bgClass} ${rank.textClass} ${rank.borderClass} ${player.nextRankId === rank.id ? 'ring-4 ring-white scale-105 z-10 shadow-xl' : 'opacity-60'}`}>{rank.icon} {rank.name}</button>
+              ))}
             </div>
             <button onClick={() => setShowRankSelect(false)} className="text-zinc-400 text-xs py-1 hover:text-white font-bold">キャンセル</button>
+          </div>
+        ) : gameState.playMode === 'physical' ? (
+          <div className="flex flex-col gap-2 w-full">
+             <div className="text-[10px] text-zinc-500 font-bold text-center uppercase tracking-tighter">着順を記録してください</div>
+             <div className="grid grid-cols-2 gap-1">
+              {availableRanks.map(rank => (
+                <button key={rank.id} onClick={() => onAction('SELECT_RANK', { playerId: player.id, rankId: rank.id })} className={`py-3 rounded-lg font-black text-[10px] transition-all border ${rank.bgClass} ${rank.textClass} ${rank.borderClass} ${player.nextRankId === rank.id ? 'ring-4 ring-white scale-105 z-10 shadow-xl' : 'opacity-60'}`}>{rank.icon} {rank.name}</button>
+              ))}
+            </div>
           </div>
         ) : gameState.phase === 'pot_claim' ? (
           <div className="flex flex-col gap-2 w-full">
@@ -368,6 +377,51 @@ function PlayerPanel({
             )}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// =====================================
+// セットアップ画面
+// =====================================
+function SetupScreen({ onStart }) {
+  const [count, setCount] = useState(4);
+  const [mode, setMode] = useState('digital');
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md">
+      <div className="w-[500px] p-8 rounded-3xl bg-zinc-900 border-4 border-amber-500 shadow-2xl neon-box-gold text-center">
+        <h1 className="text-4xl font-black text-amber-500 mb-8 tracking-tighter">DAIFUGO TRACKER</h1>
+        
+        <div className="mb-8">
+          <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 block">プレイヤー人数</label>
+          <div className="flex justify-center gap-2">
+            {[2, 3, 4, 5, 6].map(n => (
+              <button key={n} onClick={() => setCount(n)} className={`w-12 h-12 rounded-xl font-black text-lg transition-all ${count === n ? 'bg-amber-500 text-amber-950 scale-110 shadow-lg' : 'bg-zinc-800 text-zinc-500'}`}>{n}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-10">
+          <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 block">プレイモード</label>
+          <div className="flex gap-4">
+            <button onClick={() => setMode('digital')} className={`flex-1 p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${mode === 'digital' ? 'border-amber-500 bg-amber-500/10 text-amber-500' : 'border-zinc-800 bg-zinc-800/50 text-zinc-600'}`}>
+              <Layers size={32} />
+              <div className="font-black text-sm">デジタル</div>
+              <div className="text-[10px] opacity-70">アプリでカード配布</div>
+            </button>
+            <button onClick={() => setMode('physical')} className={`flex-1 p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${mode === 'physical' ? 'border-amber-500 bg-amber-500/10 text-amber-500' : 'border-zinc-800 bg-zinc-800/50 text-zinc-600'}`}>
+              <Hand size={32} />
+              <div className="font-black text-sm">リアルカード</div>
+              <div className="text-[10px] opacity-70">実際のトランプを使用</div>
+            </button>
+          </div>
+        </div>
+
+        <button onClick={() => onStart(count, mode)} className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-600 text-amber-950 font-black text-xl shadow-xl active:scale-95 transition-all border-b-4 border-amber-800">
+          ゲームスタート
+        </button>
       </div>
     </div>
   );
@@ -567,6 +621,19 @@ export default function App() {
           newState.players[playerIndex] = player;
           logsToAdd.push({ playerId: player.id, text: `降りる（パス）` });
           break;
+        case 'RUN_EVENT': {
+          const event = RANDOM_EVENTS[Math.floor(Math.random() * RANDOM_EVENTS.length)];
+          const logs = [{ text: `🎲 イベント発生: ${event.name}` }];
+          
+          let newState = { ...gameState, activeEvent: event, eventUsed: true };
+
+          if (event.id === 'revolution') {
+            newState.isGameRevolution = !newState.isGameRevolution;
+          }
+          
+          updateState(newState, logs);
+          break;
+        }
       }
       return newState;
     }, logsToAdd);
@@ -689,6 +756,12 @@ export default function App() {
 
   return (
     <div className="fixed inset-0 bg-black font-sans overflow-hidden select-none">
+      {gameState.phase === 'setup' && (
+        <SetupScreen onStart={(count, mode) => {
+          setGameState(getInitialState(count, mode));
+        }} />
+      )}
+
       <div className="fixed inset-0 pointer-events-none z-50">
         {particles.map(p => (
           <div key={p.id} className="absolute money-particle drop-shadow-xl" style={{ left: p.startX, top: p.startY, transform: 'translate(-50%, -50%)', width: '32px' }} ref={el => { if (el) setTimeout(() => { el.style.left = p.endX; el.style.top = p.endY; el.style.transform = 'translate(-50%, -50%) scale(0.5) rotate(360deg)'; el.style.opacity = '0'; }, p.delay + 50); }}>
@@ -706,7 +779,17 @@ export default function App() {
       </div>
 
       <div className="absolute inset-0 bg-velvet opacity-60 pointer-events-none" />
-      <div className={`relative z-10 grid grid-cols-2 ${gameState.playerCount > 4 ? 'grid-rows-3' : 'grid-rows-2'} gap-x-20 gap-y-24 p-6 h-full`}>
+      
+      {/* 革命中アナウンス */}
+      {gameState.isGameRevolution && (
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 z-[60] animate-pulse">
+          <div className="bg-rose-600/90 text-white px-8 py-3 rounded-full font-black text-2xl shadow-2xl border-4 border-white neon-box-gold flex items-center gap-2">
+             <Layers className="rotate-180" /> ⚔️ 革命中！
+          </div>
+        </div>
+      )}
+
+      <div className={`relative z-10 grid gap-x-2 gap-y-4 p-4 h-full ${gameState.playerCount > 4 ? 'grid-cols-3 grid-rows-2' : 'grid-cols-2 grid-rows-2'}`}>
         {gameState.players.map((player, index) => {
           const isActuallyTop = gameState.playerCount === 2 ? index === 0 : index < 2;
           const isRight = index === 0 || index === 3;

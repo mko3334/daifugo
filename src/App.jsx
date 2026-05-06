@@ -224,7 +224,7 @@ function PlayerPanel({
   };
 
   return (
-    <div className={`flex flex-col h-full w-full rounded-2xl shadow-2xl overflow-hidden border-[3px] transition-all duration-500 relative ${isTurn ? 'border-amber-400 neon-box-gold scale-105 z-40' : 'border-white/10 opacity-70 bg-zinc-900/80 backdrop-blur-md'}`}>
+    <div className={`flex flex-col h-full w-full rounded-2xl shadow-2xl overflow-visible border-[3px] transition-all duration-500 relative ${isTurn ? 'border-amber-400 neon-box-gold scale-105 z-40' : 'border-white/10 opacity-70 bg-zinc-900/80 backdrop-blur-md'}`}>
       <div className={`${headerBg} px-3 py-2 flex items-center ${isRight ? 'flex-row-reverse justify-start' : 'justify-start'} gap-3 shadow-md z-10 border-b border-black/50`}>
         <div className="shrink-0 min-w-0">
           {editingName ? (
@@ -811,8 +811,8 @@ export default function App() {
                 left: coords.x, 
                 top: coords.y, 
                 transform: 'translate(-50%, -50%)',
-                width: gameState.playerCount > 4 ? '200px' : '280px',
-                height: gameState.playerCount > 4 ? '300px' : '400px',
+                width: gameState.playerCount > 4 ? '220px' : '300px',
+                minHeight: '350px',
               }}
             >
               <div className={`w-full h-full scale-[0.85] md:scale-100 transition-transform`}>

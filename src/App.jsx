@@ -76,14 +76,14 @@ const roundToMillion = (amount) => Math.ceil(amount / 1000000) * 1000000;
 
 function getPlayerCoords(position) {
   switch (position) {
-    case 'top-left': return { x: '18vw', y: '22vh' };
-    case 'top-center': return { x: '50vw', y: '20vh' };
-    case 'top-right': return { x: '82vw', y: '22vh' };
-    case 'bottom-left': return { x: '18vw', y: '78vh' };
-    case 'bottom-center': return { x: '50vw', y: '80vh' };
-    case 'bottom-right': return { x: '82vw', y: '78vh' };
-    case 'mid-left': return { x: '15vw', y: '50vh' };
-    case 'mid-right': return { x: '85vw', y: '50vh' };
+    case 'top-left': return { x: '15vw', y: '15vh' };
+    case 'top-center': return { x: '50vw', y: '12vh' };
+    case 'top-right': return { x: '85vw', y: '15vh' };
+    case 'bottom-left': return { x: '15vw', y: '85vh' };
+    case 'bottom-center': return { x: '50vw', y: '88vh' };
+    case 'bottom-right': return { x: '85vw', y: '85vh' };
+    case 'mid-left': return { x: '10vw', y: '50vh' };
+    case 'mid-right': return { x: '90vw', y: '50vh' };
     default: return { x: '50vw', y: '50vh' };
   }
 }
@@ -222,7 +222,7 @@ function PlayerPanel({
   };
 
   return (
-    <div className={`flex flex-col h-full w-full rounded-2xl shadow-2xl overflow-hidden border-[3px] ${borderColor} ${rotationClass} bg-velvet transition-all duration-300 relative`}>
+    <div className={`flex flex-col h-full w-full rounded-2xl shadow-2xl overflow-hidden border-[3px] transition-all duration-500 relative ${isTurn ? 'border-amber-400 neon-box-gold scale-105 z-40' : 'border-white/10 opacity-70 bg-zinc-900/80 backdrop-blur-md'}`}>
       <div className={`${headerBg} px-3 py-2 flex items-center ${isRight ? 'flex-row-reverse justify-start' : 'justify-start'} gap-3 shadow-md z-10 border-b border-black/50`}>
         <div className="shrink-0 min-w-0">
           {editingName ? (
@@ -782,28 +782,37 @@ export default function App() {
       
       {/* 革命中アナウンス */}
       {gameState.isGameRevolution && (
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 z-[60] animate-pulse">
+        <div className="absolute top-[12%] left-1/2 -translate-x-1/2 z-[60] animate-pulse pointer-events-none">
           <div className="bg-rose-600/90 text-white px-8 py-3 rounded-full font-black text-2xl shadow-2xl border-4 border-white neon-box-gold flex items-center gap-2">
              <Layers className="rotate-180" /> ⚔️ 革命中！
           </div>
         </div>
       )}
 
-      <div className={`relative z-10 grid gap-x-2 gap-y-4 p-4 h-full ${gameState.playerCount > 4 ? 'grid-cols-3 grid-rows-2' : 'grid-cols-2 grid-rows-2'}`}>
+      <div className="relative z-10 w-full h-full pointer-events-none">
         {gameState.players.map((player, index) => {
-          const isActuallyTop = gameState.playerCount === 2 ? index === 0 : index < 2;
-          const isRight = index === 0 || index === 3;
+          const coords = getPlayerCoords(player.position);
           const isTurn = gameState.turnIndex === index;
           return (
-            <div key={player.id} className={`overflow-hidden rounded-2xl shadow-2xl transition-all duration-500 ${isTurn ? 'ring-4 ring-amber-500 neon-box-gold scale-105 z-30' : 'opacity-80'} ${index % 2 === 0 ? 'ml-2' : 'mr-2'} ${index < 2 ? 'mt-2' : 'mb-2'}`}>
-              <PlayerPanel player={player} gameState={gameState} availableRanks={availableRanks} onAction={handleAction} isTop={isActuallyTop} isRight={isRight} />
+            <div 
+              key={player.id} 
+              className="absolute transition-all duration-500 pointer-events-auto"
+              style={{ 
+                left: coords.x, 
+                top: coords.y, 
+                transform: 'translate(-50%, -50%)',
+                width: gameState.playerCount > 4 ? '26vw' : '40vw',
+                maxWidth: '380px'
+              }}
+            >
+              <PlayerPanel player={player} gameState={gameState} availableRanks={availableRanks} onAction={handleAction} isTurn={isTurn} />
             </div>
           );
         })}
       </div>
 
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
-        <div className="w-[300px] h-[300px] rounded-full bg-black border-4 border-amber-500 neon-box-gold shadow-2xl flex flex-col items-center justify-center relative pointer-events-auto">
+        <div className="w-[240px] h-[240px] md:w-[300px] md:h-[300px] rounded-full bg-black border-4 border-amber-500 neon-box-gold shadow-2xl flex flex-col items-center justify-center relative pointer-events-auto scale-90 md:scale-100">
           {/* 場に出ているカード */}
           <div className="absolute -top-12 flex -space-x-4 animate-bounce-subtle">
             {gameState.lastPlayedCards.map((card, i) => {

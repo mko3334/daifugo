@@ -748,7 +748,7 @@ export default function App() {
     }, logsToAdd);
   };
 
-  const resetGame = (count) => { localStorage.removeItem('daifugo_tracker_v1'); setHistory([]); setGameState(getInitialState(count)); setShowResetConfirm(false); };
+  const resetGame = (count, mode) => { localStorage.removeItem('daifugo_tracker_v1'); setHistory([]); setGameState(getInitialState(count, mode)); setShowResetConfirm(false); };
 
   const activeRanks = getRanksByCount(gameState.playerCount);
   const availableRanks = activeRanks.filter(rank => !gameState.players.some(p => p.nextRankId === rank.id));
@@ -879,19 +879,37 @@ export default function App() {
 
       {showResetConfirm && (
         <div className="absolute inset-0 bg-black/95 z-50 flex items-center justify-center backdrop-blur-md">
-          <div className="bg-zinc-900 border border-amber-500/50 rounded-3xl p-8 w-96 text-center shadow-2xl">
-            <h3 className="text-white font-black text-2xl mb-6">ゲーム設定・リセット</h3>
+          <div className="bg-zinc-900 border-4 border-amber-500 rounded-3xl p-8 w-[500px] text-center shadow-2xl neon-box-gold">
+            <h3 className="text-white font-black text-2xl mb-8 tracking-tighter">新規ゲーム設定 / リセット</h3>
+            
             <div className="mb-8">
-              <label className="text-amber-500 font-bold text-sm block mb-4 flex items-center justify-center gap-2"><Users size={18}/> プレイヤー人数を選択</label>
-              <div className="flex justify-center gap-4">
-                {[2, 3, 4].map(n => (
-                  <button key={n} onClick={() => setTempPlayerCount(n)} className={`w-16 h-16 rounded-2xl font-black text-xl flex items-center justify-center transition-all ${tempPlayerCount === n ? 'bg-amber-500 text-amber-950 scale-110 shadow-[0_0_20px_rgba(245,158,11,0.4)]' : 'bg-zinc-800 text-zinc-500 border border-zinc-700'}`}>{n}</button>
+              <label className="text-zinc-500 font-bold text-xs block mb-4 uppercase tracking-widest">プレイヤー人数</label>
+              <div className="flex justify-center gap-2">
+                {[2, 3, 4, 5, 6].map(n => (
+                  <button key={n} onClick={() => setTempPlayerCount(n)} className={`w-12 h-12 rounded-xl font-black text-lg transition-all ${tempPlayerCount === n ? 'bg-amber-500 text-amber-950 scale-110 shadow-lg' : 'bg-zinc-800 text-zinc-500 border border-zinc-700'}`}>{n}</button>
                 ))}
               </div>
             </div>
+
+            <div className="mb-10">
+              <label className="text-zinc-500 font-bold text-xs block mb-4 uppercase tracking-widest">プレイモード</label>
+              <div className="flex gap-4">
+                <button onClick={() => updateState({ playMode: 'digital' })} className={`flex-1 p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${gameState.playMode === 'digital' ? 'border-amber-500 bg-amber-500/10 text-amber-500' : 'border-zinc-800 bg-zinc-800/50 text-zinc-600'}`}>
+                  <Layers size={24} />
+                  <div className="font-black text-xs">デジタル</div>
+                </button>
+                <button onClick={() => updateState({ playMode: 'physical' })} className={`flex-1 p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${gameState.playMode === 'physical' ? 'border-amber-500 bg-amber-500/10 text-amber-500' : 'border-zinc-800 bg-zinc-800/50 text-zinc-600'}`}>
+                  <Hand size={24} />
+                  <div className="font-black text-xs">リアルカード</div>
+                </button>
+              </div>
+            </div>
+
             <div className="flex gap-4">
-              <button onClick={() => setShowResetConfirm(false)} className="flex-1 py-4 rounded-xl font-bold text-zinc-400 bg-zinc-800">戻る</button>
-              <button onClick={() => resetGame(tempPlayerCount)} className="flex-1 py-4 rounded-xl font-bold text-white bg-red-700 shadow-lg shadow-red-900/20">この人数でリセット</button>
+              <button onClick={() => setShowResetConfirm(false)} className="flex-1 py-4 rounded-xl font-bold text-zinc-400 bg-zinc-800 border border-zinc-700">キャンセル</button>
+              <button onClick={() => resetGame(tempPlayerCount, gameState.playMode)} className="flex-[2] py-4 rounded-xl font-black text-white bg-gradient-to-r from-red-600 to-rose-700 shadow-xl border-b-4 border-red-900 active:scale-95 transition-all">
+                設定を反映してリセット
+              </button>
             </div>
           </div>
         </div>

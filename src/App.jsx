@@ -76,14 +76,14 @@ const roundToMillion = (amount) => Math.ceil(amount / 1000000) * 1000000;
 
 function getPlayerCoords(position) {
   const coords = {
-    'top-left': { x: '20vw', y: '20vh' },
-    'top-center': { x: '50vw', y: '18vh' },
-    'top-right': { x: '80vw', y: '20vh' },
-    'bottom-left': { x: '20vw', y: '80vh' },
-    'bottom-center': { x: '50vw', y: '82vh' },
-    'bottom-right': { x: '80vw', y: '80vh' },
-    'mid-left': { x: '18vw', y: '50vh' },
-    'mid-right': { x: '82vw', y: '50vh' },
+    'top-left': { x: '22vw', y: '25vh' },
+    'top-center': { x: '50vw', y: '22vh' },
+    'top-right': { x: '78vw', y: '25vh' },
+    'bottom-left': { x: '22vw', y: '75vh' },
+    'bottom-center': { x: '50vw', y: '78vh' },
+    'bottom-right': { x: '78vw', y: '75vh' },
+    'mid-left': { x: '20vw', y: '50vh' },
+    'mid-right': { x: '80vw', y: '50vh' },
   };
   return coords[position] || { x: '50vw', y: '50vh' };
 }
@@ -224,7 +224,7 @@ function PlayerPanel({
   };
 
   return (
-    <div className={`flex flex-col h-full w-full rounded-2xl shadow-2xl overflow-visible border-[3px] transition-all duration-500 relative ${isTurn ? 'border-amber-400 neon-box-gold scale-105 z-40' : 'border-white/10 opacity-70 bg-zinc-900/80 backdrop-blur-md'}`}>
+    <div className={`flex flex-col max-h-[80vh] w-full rounded-2xl shadow-2xl overflow-y-auto no-scrollbar border-[3px] transition-all duration-500 relative ${isTurn ? 'border-amber-400 neon-box-gold scale-105 z-40' : 'border-white/10 opacity-70 bg-zinc-900/80 backdrop-blur-md'}`}>
       <div className={`${headerBg} px-3 py-2 flex items-center ${isRight ? 'flex-row-reverse justify-start' : 'justify-start'} gap-3 shadow-md z-10 border-b border-black/50`}>
         <div className="shrink-0 min-w-0">
           {editingName ? (
@@ -811,8 +811,7 @@ export default function App() {
                 left: coords.x, 
                 top: coords.y, 
                 transform: 'translate(-50%, -50%)',
-                width: gameState.playerCount > 4 ? '220px' : '300px',
-                minHeight: '350px',
+                width: gameState.playerCount > 4 ? '200px' : '280px',
               }}
             >
               <div className={`w-full h-full scale-[0.85] md:scale-100 transition-transform`}>
